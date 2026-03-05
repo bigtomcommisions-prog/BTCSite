@@ -1,2 +1,0 @@
-# BTCSite
-God to Go
