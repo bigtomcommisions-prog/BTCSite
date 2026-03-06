@@ -7,19 +7,50 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --ink: #f0ece3;
-      --ink2: #e8e3d8;
-      --ink3: #ddd8cc;
+      --ink:   #f0ece3;
+      --ink2:  #e8e3d8;
+      --ink3:  #ddd8cc;
       --chalk: #1a2e1c;
-      --chalk2: #4a6650;
-      --tag: #1a5c20;
-      --tag2: #246b2a;
+      --chalk2:#4a6650;
+      --tag:   #1a5c20;
+      --tag2:  #246b2a;
       --ferro: #2e7d32;
-      --ferro2: #1a5c20;
-      --ferro3: #388e3c;
-      --spray1: #4caf50;
+      --ferro2:#1a5c20;
+      --ferro3:#388e3c;
       --crack: #d0c9bc;
     }
+
+    body.dark {
+      --ink:   #0f1a10;
+      --ink2:  #162018;
+      --ink3:  #1c2a1e;
+      --chalk: #e8f0e8;
+      --chalk2:#8aab8e;
+      --tag:   #4caf50;
+      --tag2:  #66bb6a;
+      --ferro: #66bb6a;
+      --ferro2:#4caf50;
+      --ferro3:#81c784;
+      --crack: #243826;
+    }
+
+    /* ── DARK MODE TOGGLE ── */
+    #dm-toggle {
+      width: 42px; height: 24px;
+      background: var(--crack); border: 1.5px solid var(--crack);
+      border-radius: 12px; cursor: none;
+      position: relative; transition: background 0.3s, border-color 0.3s;
+      flex-shrink: 0;
+    }
+    #dm-toggle::after {
+      content: '';
+      position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--chalk2);
+      transition: transform 0.3s, background 0.3s;
+    }
+    body.dark #dm-toggle { background: var(--ferro2); border-color: var(--ferro); }
+    body.dark #dm-toggle::after { transform: translateX(18px); background: #f0ece3; }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -32,764 +63,390 @@
       cursor: none;
     }
 
-    /* ── FERROFLUID CANVAS BG ── */
-    #ferro-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.12;
-    }
-
-    /* ── CONCRETE TEXTURE OVERLAY ── */
+    /* noise overlay */
     body::before {
       content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 1;
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9990;
     }
 
     /* ── CURSOR ── */
-    .cursor {
-      position: fixed;
-      width: 10px; height: 10px;
-      background: var(--tag);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 9999;
+    #cur-dot {
+      position: fixed; width: 10px; height: 10px;
+      background: var(--tag); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
       transform: translate(-50%,-50%);
-      left: -100px; top: -100px;
-      transition: transform 0.12s, background 0.2s;
-      will-change: left, top;
+      transition: transform 0.12s;
     }
-    .cursor-ring {
-      position: fixed;
-      width: 38px; height: 38px;
-      border: 1.5px solid var(--ferro);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 9998;
-      transform: translate(-50%,-50%);
-      opacity: 0.55;
-      left: -100px; top: -100px;
-      transition: width 0.2s, height 0.2s, opacity 0.2s, border-color 0.3s;
-      will-change: left, top;
+    #cur-ring {
+      position: fixed; width: 36px; height: 36px;
+      border: 1.5px solid var(--ferro); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%); opacity: 0.55;
+      transition: width .2s, height .2s, opacity .2s, border-color .2s;
     }
 
     /* ── NAV ── */
     nav {
-      position: fixed; top: 0; left: 0; right: 0;
-      z-index: 500;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 56px;
-      border-bottom: 1px solid var(--crack);
-      backdrop-filter: blur(18px);
-      background: rgba(240,236,227,0.92);
+      padding: 18px 56px; border-bottom: 1px solid var(--crack);
+      backdrop-filter: blur(18px); background: rgba(240,236,227,0.93);
     }
-    .nav-logo {
-      font-family: 'Inter', sans-serif;
-      font-weight: 800;
-      font-size: 1.2rem;
-      color: var(--chalk);
-      letter-spacing: 0.02em;
-    }
+    body.dark nav { background: rgba(15,26,16,0.93); }
+    .nav-logo { font-weight: 800; font-size: 1.15rem; color: var(--chalk); }
     .nav-logo em { color: var(--tag); font-style: normal; }
     .nav-links { display: flex; gap: 32px; }
     .nav-links a {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--chalk2);
-      text-decoration: none;
-      transition: color 0.2s;
+      font-family: 'DM Mono', monospace; font-size: 0.72rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--chalk2); text-decoration: none; transition: color 0.2s;
     }
     .nav-links a:hover { color: var(--ferro); }
     .nav-cta {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.73rem;
-      letter-spacing: 0.12em;
-      background: transparent;
-      color: var(--tag);
-      border: 1.5px solid var(--tag);
-      padding: 9px 20px;
-      text-decoration: none;
-      text-transform: uppercase;
-      transition: background 0.2s, color 0.2s, transform 0.15s;
-      position: relative;
-      overflow: hidden;
+      font-family: 'DM Mono', monospace; font-size: 0.72rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--tag); border: 1.5px solid var(--tag);
+      padding: 9px 20px; text-decoration: none;
+      position: relative; overflow: hidden; transition: color 0.2s;
     }
     .nav-cta::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--tag);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.25s ease;
-      z-index: -1;
+      content: ''; position: absolute; inset: 0;
+      background: var(--tag); transform: scaleX(0);
+      transform-origin: left; transition: transform 0.25s ease; z-index: -1;
     }
     .nav-cta:hover::before { transform: scaleX(1); }
     .nav-cta:hover { color: #f0ece3; }
 
-    /* ── SPRAY PAINT DRIP DECORATOR ── */
-    .drip {
-      position: absolute;
-      width: 3px;
-      background: var(--tag);
-      border-radius: 0 0 3px 3px;
-      animation: drip-fall 3s ease-in infinite;
-      opacity: 0;
-    }
-    @keyframes drip-fall {
-      0% { height: 0; opacity: 0.9; transform: translateY(0); }
-      70% { height: 60px; opacity: 0.8; }
-      100% { height: 60px; opacity: 0; transform: translateY(20px); }
-    }
+    /* ── SECTIONS ── */
+    section { padding: 96px 56px; position: relative; overflow: hidden; }
+    #home     { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding-top: 60px; padding-bottom: 60px; }
+    #services { background: var(--ink); }
+    #about    { background: var(--ink2); border-top: 1px solid var(--crack); border-bottom: 1px solid var(--crack); }
+    #work     { background: var(--ink2); border-top: 1px solid var(--crack); }
+    #pricing  { background: var(--ink); }
+    #process  { background: var(--ink); }
+    #contact  { background: var(--ink2); border-top: 1px solid var(--crack); }
 
-    /* ── HERO ── */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 160px 56px 80px;
-      position: relative;
+    /* ── SPRAY LAYERS ── */
+    .spray-bg {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 0;
+      display: block;
+    }
+    .spray-fg {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 1;
       overflow: hidden;
-      z-index: 2;
     }
+    /* Everything inside section sits ABOVE both layers */
+    section > *:not(.spray-bg):not(.spray-fg) { position: relative; z-index: 10; }
 
-    /* concrete crack lines */
-    .hero::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(127deg, transparent 48%, rgba(26,92,32,0.05) 49%, rgba(26,92,32,0.05) 51%, transparent 52%),
-        linear-gradient(63deg, transparent 42%, rgba(46,125,50,0.03) 43%, rgba(46,125,50,0.03) 44%, transparent 45%);
-      pointer-events: none;
+    /* drip element — teardrop liquid drip */
+    .drip-col {
+      position: absolute; top: 0;
+      width: 4px;
+      border-radius: 0 0 8px 8px;
+      filter: blur(0.5px);
     }
+    /* splat — soft liquid puddle */
+    .splat { position: absolute; border-radius: 50%; filter: blur(2px); }
+    /* stencil */
+    .stencil-word {
+      position: absolute; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.1em; color: transparent; white-space: nowrap;
+    }
+    /* burst — liquid ripple ring */
+    .aerosol-ring { position: absolute; border-radius: 50%; border: 2px solid; filter: blur(0.5px); }
 
-    /* stencil grid */
+    /* ── HERO SPECIFIC ── */
     .hero-grid {
       position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(26,92,32,0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(26,92,32,0.06) 1px, transparent 1px);
-      background-size: 50px 50px;
-      animation: gridShift 40s linear infinite;
+      background-image: linear-gradient(rgba(26,92,32,0.06) 1px,transparent 1px),
+                        linear-gradient(90deg,rgba(26,92,32,0.06) 1px,transparent 1px);
+      background-size: 50px 50px; animation: gridShift 40s linear infinite;
+      pointer-events: none; z-index: 0;
     }
-    @keyframes gridShift {
-      from { transform: translate(0,0); }
-      to { transform: translate(50px, 50px); }
-    }
-
-    /* ferrofluid glow blob */
+    @keyframes gridShift { from{transform:translate(0,0)} to{transform:translate(50px,50px)} }
     .hero-blob {
-      position: absolute;
-      width: 700px; height: 700px;
-      left: 55%; top: 50%;
-      transform: translate(-50%, -50%);
+      position: absolute; width: 700px; height: 700px; left: 55%; top: 50%;
       border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
-      background: radial-gradient(ellipse at 40% 40%, rgba(26,92,32,0.15) 0%, rgba(46,125,50,0.08) 40%, transparent 70%);
-      animation: morphBlob 8s ease-in-out infinite, blobSpin 20s linear infinite;
-      pointer-events: none;
-      filter: blur(2px);
+      background: radial-gradient(ellipse at 40% 40%,rgba(26,92,32,0.12) 0%,rgba(46,125,50,0.06) 40%,transparent 70%);
+      animation: morphBlob 8s ease-in-out infinite, blobSpin 22s linear infinite;
+      pointer-events: none; filter: blur(3px); z-index: 0;
     }
     @keyframes morphBlob {
-      0%,100% { border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%; }
-      25%      { border-radius: 40% 60% 30% 70% / 60% 40% 70% 30%; }
-      50%      { border-radius: 70% 30% 50% 50% / 30% 70% 30% 70%; }
-      75%      { border-radius: 30% 70% 60% 40% / 70% 30% 60% 40%; }
+      0%,100%{border-radius:60% 40% 70% 30%/50% 60% 40% 50%}
+      25%{border-radius:40% 60% 30% 70%/60% 40% 70% 30%}
+      50%{border-radius:70% 30% 50% 50%/30% 70% 30% 70%}
+      75%{border-radius:30% 70% 60% 40%/70% 30% 60% 40%}
     }
     @keyframes blobSpin {
-      from { transform: translate(-50%,-50%) rotate(0deg); }
-      to   { transform: translate(-50%,-50%) rotate(360deg); }
+      from{transform:translate(-50%,-50%) rotate(0deg)}
+      to{transform:translate(-50%,-50%) rotate(360deg)}
     }
 
     .hero-tag {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 0.24em;
-      color: var(--ferro);
-      text-transform: uppercase;
-      margin-bottom: 18px;
-      opacity: 0;
-      animation: fadeUp 0.7s ease forwards 0.15s;
+      font-family:'DM Mono',monospace; font-size:0.7rem; letter-spacing:0.24em;
+      text-transform:uppercase; color:var(--ferro); margin-bottom:18px;
+      opacity:0; animation:fadeUp 0.7s ease forwards 0.15s;
     }
-
     .hero-title {
-      font-family: 'Inter', sans-serif;
-      font-weight: 800;
-      font-size: clamp(68px, 10.5vw, 152px);
-      line-height: 0.88;
-      letter-spacing: 0.01em;
-      position: relative;
-      z-index: 1;
-      opacity: 0;
-      animation: fadeUp 0.7s ease forwards 0.3s;
+      font-weight:800; font-size:clamp(68px,10.5vw,148px);
+      line-height:0.9; letter-spacing:-0.01em;
+      opacity:0; animation:fadeUp 0.7s ease forwards 0.3s;
     }
-    .hero-title .line-ghost {
-      display: block;
-      color: transparent;
-      -webkit-text-stroke: 1.5px rgba(26,92,32,0.4);
-      /* spray distress */
-      text-shadow:
-        2px 0 0 rgba(26,92,32,0.08),
-        -1px 1px 0 rgba(46,125,50,0.06);
-    }
-    .hero-title .line-fill {
-      display: block;
-      color: var(--chalk);
-      position: relative;
-    }
-    .hero-title .line-fill::after {
-      content: attr(data-text);
-      position: absolute;
-      left: 3px; top: 3px;
-      color: var(--tag);
-      z-index: -1;
-      opacity: 0.25;
-    }
-    .hero-title .accent { color: var(--tag); }
-
+    .hero-title .line-ghost { display:block; color:transparent; -webkit-text-stroke:1.5px rgba(26,92,32,0.4); }
+    .hero-title .line-fill  { display:block; color:var(--chalk); }
+    .hero-title .accent { color:var(--tag); }
     .hero-sub {
-      font-size: 0.97rem;
-      font-weight: 400;
-      color: var(--chalk2);
-      max-width: 420px;
-      line-height: 1.75;
-      margin-top: 28px;
-      opacity: 0;
-      animation: fadeUp 0.7s ease forwards 0.5s;
-      position: relative; z-index: 1;
+      font-size:0.97rem; color:var(--chalk2); max-width:420px; line-height:1.75; margin-top:28px;
+      opacity:0; animation:fadeUp 0.7s ease forwards 0.5s;
     }
-
     .hero-actions {
-      display: flex; gap: 14px; align-items: center;
-      margin-top: 40px;
-      opacity: 0;
-      animation: fadeUp 0.7s ease forwards 0.65s;
-      position: relative; z-index: 1;
+      display:flex; gap:14px; align-items:center; margin-top:40px;
+      opacity:0; animation:fadeUp 0.7s ease forwards 0.65s;
     }
     .btn-primary {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem; letter-spacing: 0.1em;
-      background: var(--tag);
-      color: #f0ece3;
-      padding: 13px 30px;
-      text-decoration: none;
-      font-weight: 700;
-      text-transform: uppercase;
-      position: relative;
-      transition: transform 0.15s, box-shadow 0.2s;
-      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+      font-family:'DM Mono',monospace; font-size:0.8rem; letter-spacing:0.1em;
+      text-transform:uppercase; background:var(--tag); color:#f0ece3;
+      padding:13px 30px; text-decoration:none; font-weight:700;
+      clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+      transition:transform 0.15s,box-shadow 0.2s;
     }
-    .btn-primary:hover {
-      transform: translateY(-2px) rotate(-0.5deg);
-      box-shadow: 4px 6px 0 rgba(26,92,32,0.3), 0 0 30px rgba(26,92,32,0.2);
-    }
+    .btn-primary:hover { transform:translateY(-2px) rotate(-0.4deg); box-shadow:4px 6px 0 rgba(26,92,32,0.28); }
     .btn-secondary {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem; letter-spacing: 0.1em;
-      color: var(--chalk2);
-      padding: 13px 30px;
-      text-decoration: none;
-      border: 1px solid var(--crack);
-      text-transform: uppercase;
-      transition: border-color 0.2s, color 0.2s, transform 0.15s;
+      font-family:'DM Mono',monospace; font-size:0.8rem; letter-spacing:0.1em;
+      text-transform:uppercase; color:var(--chalk2); padding:13px 30px;
+      text-decoration:none; border:1px solid var(--crack);
+      transition:border-color 0.2s,color 0.2s,transform 0.15s;
     }
-    .btn-secondary:hover { border-color: var(--ferro); color: var(--ferro); transform: translateY(-2px); }
-
+    .btn-secondary:hover { border-color:var(--ferro); color:var(--ferro); transform:translateY(-2px); }
     .hero-stats {
-      display: flex; gap: 56px;
-      margin-top: 72px;
-      opacity: 0;
-      animation: fadeUp 0.7s ease forwards 0.85s;
-      position: relative; z-index: 1;
+      display:flex; gap:56px; margin-top:72px;
+      opacity:0; animation:fadeUp 0.7s ease forwards 0.85s;
     }
-    .stat-num {
-      font-family: 'Inter', sans-serif;
-      font-weight: 800;
-      font-size: 2.6rem;
-      color: var(--tag);
-      line-height: 1;
-    }
-    .stat-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--chalk2); margin-top: 5px;
-    }
-    .hero-divider { width: 1px; background: var(--crack); align-self: stretch; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(22px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    .stat-num { font-weight:800; font-size:2.6rem; color:var(--tag); line-height:1; }
+    .stat-label { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--chalk2); margin-top:5px; }
+    .hero-divider { width:1px; background:var(--crack); align-self:stretch; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
 
     /* ── MARQUEE ── */
     .marquee-wrapper {
-      overflow: hidden;
-      border-top: 1px solid var(--crack);
-      border-bottom: 1px solid var(--crack);
-      padding: 13px 0;
-      background: var(--ink2);
-      position: relative; z-index: 2;
+      overflow:hidden; border-top:1px solid var(--crack); border-bottom:1px solid var(--crack);
+      padding:13px 0; background:var(--ink2); position:relative; z-index:2;
     }
-    .marquee-track {
-      display: flex;
-      animation: marqueeScroll 20s linear infinite;
-      white-space: nowrap;
-    }
-    .marquee-item {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem; letter-spacing: 0.18em;
-      color: var(--chalk2); text-transform: uppercase;
-      padding: 0 32px;
-    }
-    .marquee-item .sep { color: var(--ferro); margin-right: 8px; }
-    @keyframes marqueeScroll {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
-    }
+    .marquee-track { display:flex; animation:marqueeScroll 20s linear infinite; white-space:nowrap; }
+    .marquee-item { font-family:'DM Mono',monospace; font-size:0.7rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--chalk2); padding:0 32px; }
+    .marquee-item .sep { color:var(--ferro); margin-right:8px; }
+    @keyframes marqueeScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
-    /* ── SECTIONS ── */
-    section { padding: 96px 56px; position: relative; z-index: 2; }
+    /* ── SECTION LABELS ── */
     .section-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.66rem; letter-spacing: 0.24em; text-transform: uppercase;
-      color: var(--ferro); margin-bottom: 12px;
-      display: flex; align-items: center; gap: 10px;
+      font-family:'DM Mono',monospace; font-size:0.66rem; letter-spacing:0.24em;
+      text-transform:uppercase; color:var(--ferro); margin-bottom:12px;
+      display:flex; align-items:center; gap:10px;
     }
-    .section-label::before {
-      content: ''; display: block; width: 28px; height: 1px;
-      background: var(--ferro);
-    }
-    .section-title {
-      font-family: 'Inter', sans-serif;
-      font-weight: 800;
-      font-size: clamp(40px, 4.8vw, 68px);
-      line-height: 1;
-      letter-spacing: 0.01em;
-    }
+    .section-label::before { content:''; display:block; width:28px; height:1px; background:var(--ferro); }
+    .section-title { font-weight:800; font-size:clamp(40px,4.8vw,68px); line-height:1; letter-spacing:-0.01em; }
 
     /* ── SERVICES ── */
-    #services { background: var(--ink); }
-    .services-header { max-width: 540px; margin-bottom: 56px; }
-    .services-header p { color: var(--chalk2); margin-top: 16px; line-height: 1.7; font-size: 0.93rem; }
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2px;
-    }
+    .services-header { max-width:540px; margin-bottom:56px; }
+    .services-header p { color:var(--chalk2); margin-top:16px; line-height:1.7; font-size:0.93rem; }
+    .services-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:2px; }
     .service-card {
-      background: var(--ink2);
-      padding: 38px 32px;
-      border: 1px solid var(--crack);
-      position: relative; overflow: hidden;
-      transition: transform 0.3s;
+      background:var(--ink2); padding:38px 32px;
+      border:1px solid var(--crack); position:relative; overflow:hidden; transition:transform 0.3s;
     }
     .service-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0;
-      width: 3px; height: 0;
-      background: linear-gradient(to bottom, var(--ferro), var(--ferro2));
-      transition: height 0.4s ease;
+      content:''; position:absolute; top:0; left:0; width:3px; height:0;
+      background:linear-gradient(to bottom,var(--ferro),var(--ferro2)); transition:height 0.4s ease;
     }
-    .service-card:hover { transform: translateY(-4px) rotate(-0.2deg); }
-    .service-card:hover::before { height: 100%; }
-    /* spray stencil accent */
     .service-card::after {
-      content: attr(data-num);
-      position: absolute;
-      top: 8px; right: 16px;
-      font-family: 'Inter', sans-serif;
-      font-size: 5rem;
-      color: rgba(26,92,32,0.06);
-      line-height: 1;
-      pointer-events: none;
+      content:attr(data-num); position:absolute; top:8px; right:16px;
+      font-size:5rem; font-weight:800; color:rgba(26,92,32,0.05); line-height:1; pointer-events:none;
     }
-    .service-icon-line {
-      width: 32px; height: 3px;
-      background: linear-gradient(90deg, var(--tag), var(--ferro));
-      margin-bottom: 22px;
-      border-radius: 2px;
-    }
-    .service-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 10px; }
-    .service-desc { font-size: 0.85rem; color: var(--chalk2); line-height: 1.7; }
-    .service-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
-    .tag {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62rem; letter-spacing: 0.1em;
-      color: var(--ferro2);
-      background: rgba(26,92,32,0.08);
-      padding: 4px 9px;
-      border: 1px solid rgba(26,92,32,0.15);
+    .service-card:hover { transform:translateY(-4px) rotate(-0.2deg); }
+    .service-card:hover::before { height:100%; }
+    .svc-line { width:32px; height:3px; margin-bottom:22px; border-radius:2px; }
+    .service-title { font-weight:700; font-size:1.05rem; margin-bottom:10px; }
+    .service-desc { font-size:0.85rem; color:var(--chalk2); line-height:1.7; }
+    .service-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:18px; }
+    .stag {
+      font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.1em;
+      color:var(--ferro2); background:rgba(26,92,32,0.08); padding:4px 9px;
+      border:1px solid rgba(26,92,32,0.15);
     }
 
     /* ── ABOUT ── */
-    #about {
-      background: var(--ink2);
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 80px; align-items: center;
-      border-top: 1px solid var(--crack);
-      border-bottom: 1px solid var(--crack);
-    }
-    #about p { color: var(--chalk2); line-height: 1.8; font-size: 0.94rem; margin-top: 18px; }
-    #about p + p { margin-top: 14px; }
-    .about-highlight {
-      font-family: 'Inter', sans-serif;
-      font-weight: 800;
-      font-size: clamp(22px, 2.8vw, 38px);
-      color: var(--tag);
-      margin-top: 28px;
-      line-height: 1.15;
-      /* spray paint text-shadow */
-      text-shadow: 0 0 40px rgba(26,92,32,0.25), 2px 2px 0 rgba(240,236,227,0.0);
-    }
-    .skill-bars { margin-top: 28px; }
-    .skill-bar-item { margin-bottom: 20px; }
-    .skill-bar-header {
-      display: flex; justify-content: space-between;
-      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em;
-      margin-bottom: 7px;
-    }
-    .skill-bar-header span:last-child {
-      font-family: 'DM Mono', monospace;
-      color: var(--ferro); font-size: 0.72rem;
-    }
-    .skill-bar-track { height: 3px; background: var(--crack); overflow: hidden; }
+    #about { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+    #about p { color:var(--chalk2); line-height:1.8; font-size:0.94rem; margin-top:18px; }
+    #about p+p { margin-top:14px; }
+    .about-highlight { font-weight:800; font-size:clamp(22px,2.8vw,38px); color:var(--tag); margin-top:28px; line-height:1.15; }
+    .skill-bars { margin-top:28px; }
+    .skill-bar-item { margin-bottom:20px; }
+    .skill-bar-header { display:flex; justify-content:space-between; font-size:0.78rem; font-weight:600; letter-spacing:0.05em; margin-bottom:7px; }
+    .skill-bar-header span:last-child { font-family:'DM Mono',monospace; color:var(--ferro); font-size:0.72rem; }
+    .skill-bar-track { height:3px; background:var(--crack); overflow:hidden; }
     .skill-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--ferro2), var(--ferro));
-      transform-origin: left;
-      transform: scaleX(0);
-      transition: transform 1.4s cubic-bezier(0.22,1,0.36,1);
+      height:100%; width:95%;
+      background:linear-gradient(90deg,var(--ferro2),var(--ferro));
+      transform-origin:left; transform:scaleX(0);
+      transition:transform 1.4s cubic-bezier(0.22,1,0.36,1);
     }
-    .reveal.visible .skill-bar-fill { transform: scaleX(1); }
+    .reveal.visible .skill-bar-fill { transform:scaleX(1); }
 
     /* ── WORK ── */
-    #work { background: var(--ink2); border-top: 1px solid var(--crack); }
-    .work-header { max-width: 480px; margin-bottom: 56px; }
-    .work-header p { color: var(--chalk2); margin-top: 16px; line-height: 1.7; }
-    .work-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; }
-    .work-card {
-      background: var(--ink);
-      border: 1px solid var(--crack);
-      overflow: hidden;
-      transition: transform 0.3s;
-    }
-    .work-card:hover { transform: scale(1.015) rotate(0.3deg); }
+    .work-header { max-width:480px; margin-bottom:56px; }
+    .work-header p { color:var(--chalk2); margin-top:16px; line-height:1.7; }
+    .work-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; }
+    .work-card { background:var(--ink); border:1px solid var(--crack); overflow:hidden; transition:transform 0.3s; }
+    .work-card:hover { transform:scale(1.015) rotate(0.3deg); }
     .work-thumb {
-      height: 155px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Inter', sans-serif;
-      font-size: 2.6rem; letter-spacing: 0.04em;
-      position: relative; overflow: hidden;
+      height:155px; display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:2.4rem; letter-spacing:0.04em; position:relative; overflow:hidden;
     }
-    .work-thumb::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: inherit; filter: brightness(0.28);
-    }
-    /* spray paint splatter effect */
-    .work-thumb::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse at 30% 70%, rgba(255,255,255,0.04) 0%, transparent 60%);
-    }
-    .work-thumb-text { position: relative; z-index: 1; }
-    .work-info { padding: 18px 20px; }
-    .work-name { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; }
-    .work-meta {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem; letter-spacing: 0.1em; color: var(--ferro);
-    }
-    .wt1 { background: linear-gradient(135deg,#1a0800,#3d1200); }
-    .wt2 { background: linear-gradient(135deg,#060d00,#0f2200); }
-    .wt3 { background: linear-gradient(135deg,#00080d,#001020); }
-    .wt4 { background: linear-gradient(135deg,#14000d,#280018); }
-    .wt5 { background: linear-gradient(135deg,#0d0e00,#1e1f00); }
-    .wt6 { background: linear-gradient(135deg,#001010,#002020); }
+    .work-thumb::before { content:''; position:absolute; inset:0; background:inherit; filter:brightness(0.94); }
+    .work-thumb-text { position:relative; z-index:1; color:var(--tag); opacity:0.5; }
+    .work-info { padding:18px 20px; }
+    .work-name { font-weight:700; font-size:0.92rem; margin-bottom:4px; }
+    .work-meta { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; color:var(--ferro); }
+    .wt1{background:linear-gradient(135deg,#e8e3d8,#ddd8cc)}
+    .wt2{background:linear-gradient(135deg,#e2ede3,#d4e8d5)}
+    .wt3{background:linear-gradient(135deg,#e8e3d8,#e0dbd0)}
+    .wt4{background:linear-gradient(135deg,#dde8de,#cfe0d0)}
+    .wt5{background:linear-gradient(135deg,#e8e3d8,#ddd8cc)}
+    .wt6{background:linear-gradient(135deg,#e2ede3,#d8e8da)}
 
     /* ── PRICING ── */
-    #pricing { background: var(--ink); }
-    .pricing-header { max-width: 480px; margin-bottom: 56px; }
-    .pricing-header p { color: var(--chalk2); margin-top: 16px; line-height: 1.7; }
-    .pricing-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-bottom: 2px; }
+    .pricing-header { max-width:480px; margin-bottom:56px; }
+    .pricing-header p { color:var(--chalk2); margin-top:16px; line-height:1.7; }
+    .pricing-row { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; margin-bottom:2px; }
     .pricing-card {
-      background: var(--ink2);
-      padding: 36px 30px;
-      border: 1px solid var(--crack);
-      position: relative; overflow: hidden;
-      transition: transform 0.3s;
+      background:var(--ink2); padding:36px 30px;
+      border:1px solid var(--crack); position:relative; overflow:hidden; transition:transform 0.3s;
     }
-    .pricing-card.featured {
-      border-color: var(--ferro2);
-      background: #0d0b18;
-    }
+    .pricing-card.featured { border-color:var(--ferro2); background:#e2ede3; }
     .pricing-card.featured::after {
-      content: 'POPULAR';
-      position: absolute;
-      top: 18px; right: -32px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.58rem; letter-spacing: 0.15em;
-      background: var(--ferro2);
-      color: var(--chalk);
-      padding: 5px 44px;
-      transform: rotate(45deg);
+      content:'POPULAR'; position:absolute; top:18px; right:-32px;
+      font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.15em;
+      background:var(--ferro2); color:#f0ece3; padding:5px 44px; transform:rotate(45deg);
     }
-    .pricing-card:hover { transform: translateY(-5px); }
-    /* ferrofluid shimmer top bar */
+    .pricing-card:hover { transform:translateY(-5px); }
     .pricing-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--ferro2), var(--ferro), var(--ferro3));
-      opacity: 0;
-      transition: opacity 0.3s;
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,var(--ferro2),var(--ferro),var(--ferro3));
+      opacity:0; transition:opacity 0.3s;
     }
-    .pricing-card:hover::before { opacity: 1; }
-    .pricing-tier {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--ferro); margin-bottom: 12px;
-    }
-    .pricing-price {
-      font-family: 'Inter', sans-serif;
-      font-weight: 800;
-      font-size: 3rem; line-height: 1; color: var(--chalk);
-    }
-    .pricing-price span {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem; font-weight: 400; color: var(--chalk2);
-    }
-    .pricing-robux {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem; color: rgba(26,92,32,0.7); margin-top: 3px;
-    }
-    .pricing-desc { font-size: 0.82rem; color: var(--chalk2); margin-top: 10px; line-height: 1.65; }
-    .pricing-divider { height: 1px; background: var(--crack); margin: 18px 0; }
-    .pricing-features { list-style: none; }
-    .pricing-features li {
-      font-size: 0.83rem; color: var(--chalk2);
-      padding: 5px 0;
-      display: flex; align-items: flex-start; gap: 9px;
-    }
-    .pricing-features li::before {
-      content: '/';
-      color: var(--ferro); font-family: 'DM Mono', monospace;
-      font-size: 0.85rem; flex-shrink: 0; margin-top: 1px;
-    }
-    .pricing-features li strong { color: var(--chalk); }
-    .addon-price {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem; color: var(--chalk2); margin-left: 5px;
-    }
-    .pricing-btn {
-      display: block; margin-top: 22px; text-align: center;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem; letter-spacing: 0.12em;
-      padding: 12px; text-decoration: none; font-weight: 500;
-      text-transform: uppercase;
-      transition: all 0.2s;
-    }
-    .pricing-btn-outline {
-      border: 1px solid var(--crack); color: var(--chalk2);
-    }
-    .pricing-btn-outline:hover { border-color: var(--ferro); color: var(--ferro); }
-    .pricing-btn-filled {
-      background: var(--ferro2); color: #f0ece3;
-      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
-    }
-    .pricing-btn-filled:hover { background: var(--ferro); color: #f0ece3; }
-    .pricing-footnote {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem; letter-spacing: 0.1em; color: var(--chalk2);
-      margin-top: 20px; text-align: center;
-    }
+    .pricing-card:hover::before { opacity:1; }
+    .pricing-tier { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--ferro); margin-bottom:12px; }
+    .pricing-price { font-weight:800; font-size:3rem; line-height:1; color:var(--chalk); }
+    .pricing-price span { font-size:0.9rem; font-weight:400; color:var(--chalk2); }
+    .pricing-robux { font-family:'DM Mono',monospace; font-size:0.68rem; color:rgba(26,92,32,0.65); margin-top:3px; }
+    .pricing-desc { font-size:0.82rem; color:var(--chalk2); margin-top:10px; line-height:1.65; }
+    .pricing-divider { height:1px; background:var(--crack); margin:18px 0; }
+    .pricing-features { list-style:none; }
+    .pricing-features li { font-size:0.83rem; color:var(--chalk2); padding:5px 0; display:flex; align-items:flex-start; gap:9px; }
+    .pricing-features li::before { content:'/'; color:var(--ferro); font-family:'DM Mono',monospace; font-size:0.85rem; flex-shrink:0; margin-top:1px; }
+    .pricing-features li strong { color:var(--chalk); }
+    .addon-price { font-family:'DM Mono',monospace; font-size:0.68rem; color:var(--chalk2); margin-left:5px; }
+    .pricing-btn { display:block; margin-top:22px; text-align:center; font-family:'DM Mono',monospace; font-size:0.75rem; letter-spacing:0.12em; padding:12px; text-decoration:none; text-transform:uppercase; transition:all 0.2s; }
+    .pricing-btn-outline { border:1px solid var(--crack); color:var(--chalk2); }
+    .pricing-btn-outline:hover { border-color:var(--ferro); color:var(--ferro); }
+    .pricing-btn-filled { background:var(--ferro2); color:#f0ece3; clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%); }
+    .pricing-btn-filled:hover { background:var(--ferro); }
+    .pricing-footnote { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; color:var(--chalk2); margin-top:20px; text-align:center; }
 
     /* ── PROCESS ── */
-    #process { background: var(--ink); }
-    .process-header { max-width: 480px; margin-bottom: 56px; }
-    .process-header p { color: var(--chalk2); margin-top: 16px; line-height: 1.7; }
-    .process-step {
-      display: grid; grid-template-columns: 80px 1fr;
-      border-bottom: 1px solid var(--crack);
-      padding: 28px 0; align-items: start;
-    }
-    .process-step:first-of-type { border-top: 1px solid var(--crack); }
-    .step-num {
-      font-family: 'Inter', sans-serif;
-      font-weight: 700;
-      font-size: 0.85rem; letter-spacing: 0.08em; color: var(--ferro);
-      padding-top: 2px;
-    }
-    .step-title { font-weight: 700; font-size: 1rem; margin-bottom: 7px; }
-    .step-desc { font-size: 0.85rem; color: var(--chalk2); line-height: 1.75; max-width: 540px; }
+    .process-header { max-width:480px; margin-bottom:56px; }
+    .process-header p { color:var(--chalk2); margin-top:16px; line-height:1.7; }
+    .process-step { display:grid; grid-template-columns:80px 1fr; border-bottom:1px solid var(--crack); padding:28px 0; align-items:start; }
+    .process-step:first-of-type { border-top:1px solid var(--crack); }
+    .step-num { font-weight:700; font-size:0.85rem; letter-spacing:0.08em; color:var(--ferro); padding-top:2px; }
+    .step-title { font-weight:700; font-size:1rem; margin-bottom:7px; }
+    .step-desc { font-size:0.85rem; color:var(--chalk2); line-height:1.75; max-width:540px; }
 
     /* ── CONTACT ── */
-    #contact { background: var(--ink2); border-top: 1px solid var(--crack); }
-    .contact-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
-    .contact-left p { color: var(--chalk2); line-height: 1.8; margin-top: 18px; font-size: 0.93rem; }
-    .contact-links { margin-top: 36px; display: flex; flex-direction: column; }
-    .contact-link {
-      display: flex; align-items: center; gap: 12px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem; letter-spacing: 0.06em;
-      color: var(--chalk2); text-decoration: none;
-      padding: 13px 0; border-bottom: 1px solid var(--crack);
-      transition: color 0.2s;
+    .contact-inner { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; }
+    .contact-left p { color:var(--chalk2); line-height:1.8; margin-top:18px; font-size:0.93rem; }
+    .contact-links { margin-top:36px; display:flex; flex-direction:column; }
+    .contact-link { display:flex; align-items:center; gap:12px; font-family:'DM Mono',monospace; font-size:0.8rem; letter-spacing:0.06em; color:var(--chalk2); text-decoration:none; padding:13px 0; border-bottom:1px solid var(--crack); transition:color 0.2s; }
+    .contact-link:hover { color:var(--ferro); }
+    .contact-link-icon { width:30px; height:30px; background:rgba(26,92,32,0.07); border:1px solid rgba(26,92,32,0.2); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:0.75rem; color:var(--ferro); flex-shrink:0; }
+    .form-label-block { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.2em; color:var(--ferro); text-transform:uppercase; margin-bottom:18px; }
+    .form-group { margin-bottom:12px; }
+    .form-group input,.form-group select,.form-group textarea {
+      width:100%; background:var(--ink); border:1px solid var(--crack); color:var(--chalk);
+      padding:12px 15px; font-family:'Inter',sans-serif; font-size:0.87rem;
+      outline:none; transition:border-color 0.2s; appearance:none;
     }
-    .contact-link:hover { color: var(--ferro); }
-    .contact-link-icon {
-      width: 30px; height: 30px;
-      background: rgba(26,92,32,0.07);
-      border: 1px solid rgba(26,92,32,0.2);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'DM Mono', monospace; font-size: 0.75rem;
-      color: var(--ferro); flex-shrink: 0;
-    }
-    .form-label-block {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem; letter-spacing: 0.2em; color: var(--ferro);
-      text-transform: uppercase; margin-bottom: 18px;
-    }
-    .form-group { margin-bottom: 12px; }
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      background: var(--ink2);
-      border: 1px solid var(--crack);
-      color: var(--chalk);
-      padding: 12px 15px;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.87rem;
-      outline: none;
-      transition: border-color 0.2s;
-      appearance: none;
-    }
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus { border-color: var(--ferro); }
-    .form-group textarea { resize: vertical; min-height: 96px; }
-    .form-group input::placeholder,
-    .form-group textarea::placeholder { color: var(--chalk2); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus { border-color:var(--ferro); }
+    .form-group textarea { resize:vertical; min-height:96px; }
+    .form-group input::placeholder,.form-group textarea::placeholder { color:var(--chalk2); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .form-submit {
-      width: 100%;
-      background: var(--tag);
-      border: none; color: #f0ece3;
-      padding: 14px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem; letter-spacing: 0.14em; font-weight: 700;
-      cursor: none; text-transform: uppercase;
-      clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
-      transition: background 0.2s, transform 0.15s;
+      width:100%; background:var(--tag); border:none; color:#f0ece3;
+      padding:14px; font-family:'DM Mono',monospace; font-size:0.8rem; letter-spacing:0.14em; font-weight:700;
+      cursor:none; text-transform:uppercase;
+      clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);
+      transition:background 0.2s,transform 0.15s;
     }
-    .form-submit:hover { background: var(--tag2); transform: translateY(-1px); }
+    .form-submit:hover { background:var(--tag2); transform:translateY(-1px); }
+
+    /* ── DIVIDER ── */
+    .spray-divider { height:3px; background:linear-gradient(90deg,transparent,var(--ferro2) 20%,var(--ferro) 50%,var(--ferro3) 80%,transparent); opacity:0.55; }
 
     /* ── FOOTER ── */
-    footer {
-      background: var(--ink);
-      border-top: 1px solid var(--crack);
-      padding: 32px 56px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: relative; z-index: 2;
-    }
-    .footer-logo {
-      font-family: 'Inter', sans-serif;
-      font-weight: 800;
-      font-size: 1rem; letter-spacing: 0.02em;
-    }
-    .footer-logo em { color: var(--tag); font-style: normal; }
-    .footer-copy {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem; letter-spacing: 0.1em; color: var(--chalk2);
-    }
-    .footer-copy em { color: var(--ferro); font-style: normal; }
-
-    /* ── SPRAY PAINT SECTION DIVIDERS ── */
-    .spray-divider {
-      position: relative; height: 3px;
-      overflow: visible; z-index: 2;
-    }
-    .spray-divider::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, var(--ferro2), var(--ferro), var(--ferro3), var(--tag), transparent);
-      opacity: 0.6;
-      filter: blur(1px);
-    }
+    footer { background:var(--ink); border-top:1px solid var(--crack); padding:32px 56px; display:flex; align-items:center; justify-content:space-between; position:relative; z-index:2; }
+    .footer-logo { font-weight:800; font-size:1rem; }
+    .footer-logo em { color:var(--tag); font-style:normal; }
+    .footer-copy { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; color:var(--chalk2); }
+    .footer-copy em { color:var(--ferro); font-style:normal; }
 
     /* ── REVEAL ── */
-    .reveal {
-      opacity: 0;
-      transform: translateY(28px);
-      transition: opacity 0.7s ease, transform 0.7s ease;
-    }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-
-    /* ── FERROFLUID ANIMATED SVG DECORATION ── */
-    .ferro-decor {
-      position: absolute;
-      pointer-events: none;
-      opacity: 0.15;
-    }
+    .reveal { opacity:0; transform:translateY(28px); transition:opacity 0.7s ease,transform 0.7s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      nav { padding: 16px 24px; }
-      .nav-links { display: none; }
-      .hero { padding: 120px 24px 60px; }
-      .hero-stats { gap: 28px; flex-wrap: wrap; }
-      section { padding: 64px 24px; }
-      #about { grid-template-columns: 1fr; gap: 40px; }
-      .pricing-row { grid-template-columns: 1fr; }
-      .work-grid { grid-template-columns: 1fr 1fr; }
-      .contact-inner { grid-template-columns: 1fr; gap: 44px; }
-      footer { flex-direction: column; gap: 10px; text-align: center; }
+    @media(max-width:900px){
+      nav{padding:16px 24px;} .nav-links{display:none;}
+      #home{padding:120px 24px 60px;} .hero-stats{gap:28px;flex-wrap:wrap;}
+      section{padding:64px 24px;} #about{grid-template-columns:1fr;gap:40px;}
+      .pricing-row{grid-template-columns:1fr;} .work-grid{grid-template-columns:1fr 1fr;}
+      .contact-inner{grid-template-columns:1fr;gap:44px;}
+      footer{flex-direction:column;gap:10px;text-align:center;}
     }
-    @media (max-width: 600px) {
-      .work-grid { grid-template-columns: 1fr; }
-      .services-grid { grid-template-columns: 1fr; }
+    @media(max-width:600px){
+      .work-grid{grid-template-columns:1fr;} .services-grid{grid-template-columns:1fr;}
     }
   </style>
 </head>
 <body>
 
-  <!-- Ferrofluid canvas -->
-  <canvas id="ferro-canvas"></canvas>
+  <div id="cur-dot"></div>
+  <div id="cur-ring"></div>
 
-  <div class="cursor" id="cursor"></div>
-  <div class="cursor-ring" id="cursorRing"></div>
-
-  <!-- NAV -->
   <nav>
     <div class="nav-logo">big-tom<em>.</em>commissions</div>
     <div class="nav-links">
-      <a href="#services">Services</a>
-      <a href="#work">Work</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#process">Process</a>
-      <a href="#contact">Contact</a>
+      <a href="#services">Services</a><a href="#work">Work</a>
+      <a href="#pricing">Pricing</a><a href="#process">Process</a><a href="#contact">Contact</a>
     </div>
     <a href="#contact" class="nav-cta">hire me</a>
+    <button id="dm-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"></button>
   </nav>
 
   <!-- HERO -->
-  <section class="hero" id="home">
+  <section id="home">
+    <canvas class="spray-bg" id="spray-hero"></canvas>
+    <div class="spray-fg" id="fg-hero"></div>
     <div class="hero-grid"></div>
     <div class="hero-blob"></div>
-
     <div class="hero-tag">// Roblox Scripter for Hire</div>
     <h1 class="hero-title">
       <span class="line-ghost">big-tom</span>
-      <span class="line-fill accent" data-text="commissions">commissions</span>
+      <span class="line-fill accent">commissions</span>
     </h1>
     <p class="hero-sub">Professional Roblox scripting and game development. Custom systems, immersive gameplay, and clean code — built to your vision.</p>
     <div class="hero-actions">
@@ -797,24 +454,14 @@
       <a href="#work" class="btn-secondary">View Work</a>
     </div>
     <div class="hero-stats">
-      <div>
-        <div class="stat-num">50+</div>
-        <div class="stat-label">Projects Completed</div>
-      </div>
+      <div><div class="stat-num">50+</div><div class="stat-label">Projects Completed</div></div>
       <div class="hero-divider"></div>
-      <div>
-        <div class="stat-num">3+</div>
-        <div class="stat-label">Years Experience</div>
-      </div>
+      <div><div class="stat-num">3+</div><div class="stat-label">Years Experience</div></div>
       <div class="hero-divider"></div>
-      <div>
-        <div class="stat-num">100%</div>
-        <div class="stat-label">Client Satisfaction</div>
-      </div>
+      <div><div class="stat-num">100%</div><div class="stat-label">Client Satisfaction</div></div>
     </div>
   </section>
 
-  <!-- MARQUEE -->
   <div class="marquee-wrapper">
     <div class="marquee-track">
       <span class="marquee-item"><span class="sep">&#9650;</span>Roblox Scripting</span>
@@ -838,6 +485,8 @@
 
   <!-- SERVICES -->
   <section id="services">
+    <canvas class="spray-bg" id="spray-services"></canvas>
+    <div class="spray-fg" id="fg-services"></div>
     <div class="services-header reveal">
       <div class="section-label">What I Build</div>
       <h2 class="section-title">SERVICES &amp;<br>SPECIALITIES</h2>
@@ -845,40 +494,40 @@
     </div>
     <div class="services-grid">
       <div class="service-card reveal" data-num="01">
-        <div class="service-icon-line"></div>
+        <div class="svc-line" style="background:linear-gradient(90deg,#1a5c20,#2e7d32)"></div>
         <div class="service-title">Combat Systems</div>
         <p class="service-desc">Custom hitbox detection, combo systems, ability frameworks, and weapon logic built for smooth and responsive gameplay.</p>
-        <div class="service-tags"><span class="tag">Hitboxes</span><span class="tag">Abilities</span><span class="tag">Combos</span></div>
+        <div class="service-tags"><span class="stag">Hitboxes</span><span class="stag">Abilities</span><span class="stag">Combos</span></div>
       </div>
       <div class="service-card reveal" data-num="02">
-        <div class="service-icon-line" style="background:linear-gradient(90deg,var(--ferro2),var(--spray1))"></div>
+        <div class="svc-line" style="background:linear-gradient(90deg,#2e7d32,#4caf50)"></div>
         <div class="service-title">Data &amp; Progression</div>
         <p class="service-desc">Reliable DataStore solutions, player progression, currency systems, and save data — safe and fast.</p>
-        <div class="service-tags"><span class="tag">DataStore2</span><span class="tag">Profiles</span><span class="tag">Leaderboards</span></div>
+        <div class="service-tags"><span class="stag">DataStore2</span><span class="stag">Profiles</span><span class="stag">Leaderboards</span></div>
       </div>
       <div class="service-card reveal" data-num="03">
-        <div class="service-icon-line" style="background:linear-gradient(90deg,var(--ferro),var(--ferro2))"></div>
+        <div class="svc-line" style="background:linear-gradient(90deg,#388e3c,#1a5c20)"></div>
         <div class="service-title">UI / Interfaces</div>
         <p class="service-desc">Clean, animated UIs including menus, inventory systems, HUDs, shops, and notification systems.</p>
-        <div class="service-tags"><span class="tag">Menus</span><span class="tag">Inventory</span><span class="tag">Animations</span></div>
+        <div class="service-tags"><span class="stag">Menus</span><span class="stag">Inventory</span><span class="stag">Animations</span></div>
       </div>
       <div class="service-card reveal" data-num="04">
-        <div class="service-icon-line" style="background:linear-gradient(90deg,var(--tag),var(--ferro3))"></div>
+        <div class="svc-line" style="background:linear-gradient(90deg,#1a5c20,#388e3c)"></div>
         <div class="service-title">Admin &amp; Tools</div>
         <p class="service-desc">Custom admin panels, moderation commands, player management tools, and server-side utilities.</p>
-        <div class="service-tags"><span class="tag">Commands</span><span class="tag">Moderation</span><span class="tag">Panels</span></div>
+        <div class="service-tags"><span class="stag">Commands</span><span class="stag">Moderation</span><span class="stag">Panels</span></div>
       </div>
       <div class="service-card reveal" data-num="05">
-        <div class="service-icon-line" style="background:linear-gradient(90deg,var(--spray1),var(--ferro))"></div>
+        <div class="svc-line" style="background:linear-gradient(90deg,#4caf50,#1a5c20)"></div>
         <div class="service-title">Optimization</div>
         <p class="service-desc">Performance audits and rewrites for laggy scripts. Reduce server load, improve frame rates, smoother experience.</p>
-        <div class="service-tags"><span class="tag">Profiling</span><span class="tag">Rewriting</span><span class="tag">Memory</span></div>
+        <div class="service-tags"><span class="stag">Profiling</span><span class="stag">Rewriting</span><span class="stag">Memory</span></div>
       </div>
       <div class="service-card reveal" data-num="06">
-        <div class="service-icon-line" style="background:linear-gradient(90deg,var(--ferro3),var(--tag))"></div>
+        <div class="svc-line" style="background:linear-gradient(90deg,#2e7d32,#1a5c20)"></div>
         <div class="service-title">Full Game Dev</div>
         <p class="service-desc">End-to-end scripting support for complete games. From core loops to polish — I bring your game idea to life.</p>
-        <div class="service-tags"><span class="tag">Core Loop</span><span class="tag">Systems</span><span class="tag">Launch Ready</span></div>
+        <div class="service-tags"><span class="stag">Core Loop</span><span class="stag">Systems</span><span class="stag">Launch Ready</span></div>
       </div>
     </div>
   </section>
@@ -887,6 +536,8 @@
 
   <!-- ABOUT -->
   <section id="about">
+    <canvas class="spray-bg" id="spray-about"></canvas>
+    <div class="spray-fg" id="fg-about"></div>
     <div class="reveal">
       <div class="section-label">Who I Am</div>
       <h2 class="section-title">THE SCRIPTER<br>BEHIND THE CODE</h2>
@@ -897,26 +548,11 @@
     <div class="reveal">
       <div class="section-label">Technical Stack</div>
       <div class="skill-bars">
-        <div class="skill-bar-item">
-          <div class="skill-bar-header"><span>Lua / Luau</span><span>95%</span></div>
-          <div class="skill-bar-track"><div class="skill-bar-fill" style="width:95%"></div></div>
-        </div>
-        <div class="skill-bar-item">
-          <div class="skill-bar-header"><span>Roblox Studio</span><span>95%</span></div>
-          <div class="skill-bar-track"><div class="skill-bar-fill" style="width:95%;transition-delay:0.1s"></div></div>
-        </div>
-        <div class="skill-bar-item">
-          <div class="skill-bar-header"><span>UI Design (Roblox)</span><span>85%</span></div>
-          <div class="skill-bar-track"><div class="skill-bar-fill" style="width:85%;transition-delay:0.2s"></div></div>
-        </div>
-        <div class="skill-bar-item">
-          <div class="skill-bar-header"><span>DataStore / Persistence</span><span>90%</span></div>
-          <div class="skill-bar-track"><div class="skill-bar-fill" style="width:90%;transition-delay:0.3s"></div></div>
-        </div>
-        <div class="skill-bar-item">
-          <div class="skill-bar-header"><span>Game Architecture</span><span>80%</span></div>
-          <div class="skill-bar-track"><div class="skill-bar-fill" style="width:80%;transition-delay:0.4s"></div></div>
-        </div>
+        <div class="skill-bar-item"><div class="skill-bar-header"><span>Lua / Luau</span><span>95%</span></div><div class="skill-bar-track"><div class="skill-bar-fill"></div></div></div>
+        <div class="skill-bar-item"><div class="skill-bar-header"><span>Roblox Studio</span><span>95%</span></div><div class="skill-bar-track"><div class="skill-bar-fill" style="transition-delay:0.1s"></div></div></div>
+        <div class="skill-bar-item"><div class="skill-bar-header"><span>UI Design (Roblox)</span><span>85%</span></div><div class="skill-bar-track"><div class="skill-bar-fill" style="transition-delay:0.2s;width:85%"></div></div></div>
+        <div class="skill-bar-item"><div class="skill-bar-header"><span>DataStore / Persistence</span><span>90%</span></div><div class="skill-bar-track"><div class="skill-bar-fill" style="transition-delay:0.3s;width:90%"></div></div></div>
+        <div class="skill-bar-item"><div class="skill-bar-header"><span>Game Architecture</span><span>80%</span></div><div class="skill-bar-track"><div class="skill-bar-fill" style="transition-delay:0.4s;width:80%"></div></div></div>
       </div>
     </div>
   </section>
@@ -925,36 +561,20 @@
 
   <!-- WORK -->
   <section id="work">
+    <canvas class="spray-bg" id="spray-work"></canvas>
+    <div class="spray-fg" id="fg-work"></div>
     <div class="work-header reveal">
       <div class="section-label">Portfolio</div>
       <h2 class="section-title">SELECTED<br>WORK</h2>
       <p>A selection of projects I have built or contributed to. Each one crafted with care and precision.</p>
     </div>
     <div class="work-grid">
-      <div class="work-card reveal">
-        <div class="work-thumb wt1"><span class="work-thumb-text">COMBAT</span></div>
-        <div class="work-info"><div class="work-name">Combat Framework v2</div><div class="work-meta">// Custom Hitboxes · Abilities · Animations</div></div>
-      </div>
-      <div class="work-card reveal">
-        <div class="work-thumb wt2"><span class="work-thumb-text">RPG SYS</span></div>
-        <div class="work-info"><div class="work-name">RPG Progression System</div><div class="work-meta">// DataStore · Levelling · Quests</div></div>
-      </div>
-      <div class="work-card reveal">
-        <div class="work-thumb wt3"><span class="work-thumb-text">ADMIN</span></div>
-        <div class="work-info"><div class="work-name">Admin Panel System</div><div class="work-meta">// Commands · Moderation · Logging</div></div>
-      </div>
-      <div class="work-card reveal">
-        <div class="work-thumb wt4"><span class="work-thumb-text">SHOP UI</span></div>
-        <div class="work-info"><div class="work-name">In-Game Shop + Inventory</div><div class="work-meta">// UI · Currency · Persistence</div></div>
-      </div>
-      <div class="work-card reveal">
-        <div class="work-thumb wt5"><span class="work-thumb-text">TOWER</span></div>
-        <div class="work-info"><div class="work-name">Tower Defence Core</div><div class="work-meta">// Waves · Pathing · Placement</div></div>
-      </div>
-      <div class="work-card reveal">
-        <div class="work-thumb wt6"><span class="work-thumb-text">PVPZ</span></div>
-        <div class="work-info"><div class="work-name">PvP Zone System</div><div class="work-meta">// Zones · Matchmaking · Stats</div></div>
-      </div>
+      <div class="work-card reveal"><div class="work-thumb wt1"><span class="work-thumb-text">COMBAT</span></div><div class="work-info"><div class="work-name">Combat Framework v2</div><div class="work-meta">// Custom Hitboxes · Abilities · Animations</div></div></div>
+      <div class="work-card reveal"><div class="work-thumb wt2"><span class="work-thumb-text">RPG SYS</span></div><div class="work-info"><div class="work-name">RPG Progression System</div><div class="work-meta">// DataStore · Levelling · Quests</div></div></div>
+      <div class="work-card reveal"><div class="work-thumb wt3"><span class="work-thumb-text">ADMIN</span></div><div class="work-info"><div class="work-name">Admin Panel System</div><div class="work-meta">// Commands · Moderation · Logging</div></div></div>
+      <div class="work-card reveal"><div class="work-thumb wt4"><span class="work-thumb-text">SHOP UI</span></div><div class="work-info"><div class="work-name">In-Game Shop + Inventory</div><div class="work-meta">// UI · Currency · Persistence</div></div></div>
+      <div class="work-card reveal"><div class="work-thumb wt5"><span class="work-thumb-text">TOWER</span></div><div class="work-info"><div class="work-name">Tower Defence Core</div><div class="work-meta">// Waves · Pathing · Placement</div></div></div>
+      <div class="work-card reveal"><div class="work-thumb wt6"><span class="work-thumb-text">PVPZ</span></div><div class="work-info"><div class="work-name">PvP Zone System</div><div class="work-meta">// Zones · Matchmaking · Stats</div></div></div>
     </div>
   </section>
 
@@ -962,12 +582,13 @@
 
   <!-- PRICING -->
   <section id="pricing">
+    <canvas class="spray-bg" id="spray-pricing"></canvas>
+    <div class="spray-fg" id="fg-pricing"></div>
     <div class="pricing-header reveal">
       <div class="section-label">Rates</div>
       <h2 class="section-title">CLEAR &amp;<br>FAIR PRICING</h2>
       <p>Transparent pricing with no hidden fees. All tiers include 2 revisions, 50% upfront and 50% on delivery. NDA available on request.</p>
     </div>
-
     <div class="pricing-row">
       <div class="pricing-card reveal">
         <div class="pricing-tier">// Small Scripts &amp; Bug Fixes</div>
@@ -975,11 +596,7 @@
         <div class="pricing-robux">approx. R$43,500</div>
         <p class="pricing-desc">Minor scripts, small features, and straightforward bug fixes.</p>
         <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li>Single script or fix</li>
-          <li>2 revisions included</li>
-          <li>50% upfront, 50% on delivery</li>
-        </ul>
+        <ul class="pricing-features"><li>Single script or fix</li><li>2 revisions included</li><li>50% upfront, 50% on delivery</li></ul>
         <a href="#contact" class="pricing-btn pricing-btn-outline">Get Started</a>
       </div>
       <div class="pricing-card reveal">
@@ -988,11 +605,7 @@
         <div class="pricing-robux">approx. R$72,500</div>
         <p class="pricing-desc">One fully built system — combat, data, UI, admin, and more.</p>
         <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li>Complete system build</li>
-          <li>2 revisions included</li>
-          <li>50% upfront, 50% on delivery</li>
-        </ul>
+        <ul class="pricing-features"><li>Complete system build</li><li>2 revisions included</li><li>50% upfront, 50% on delivery</li></ul>
         <a href="#contact" class="pricing-btn pricing-btn-outline">Get Started</a>
       </div>
       <div class="pricing-card featured reveal">
@@ -1001,27 +614,18 @@
         <div class="pricing-robux">approx. R$130,500</div>
         <p class="pricing-desc">Several interconnected systems built together as a cohesive package.</p>
         <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li>Multiple system builds</li>
-          <li>2 revisions included</li>
-          <li>50% upfront, 50% on delivery</li>
-        </ul>
+        <ul class="pricing-features"><li>Multiple system builds</li><li>2 revisions included</li><li>50% upfront, 50% on delivery</li></ul>
         <a href="#contact" class="pricing-btn pricing-btn-filled">Get Started</a>
       </div>
     </div>
-
-    <div class="pricing-row" style="margin-top:2px;">
+    <div class="pricing-row" style="margin-top:2px">
       <div class="pricing-card reveal">
         <div class="pricing-tier">// Core Game Loop</div>
         <div class="pricing-price">$600 <span>from</span></div>
         <div class="pricing-robux">approx. R$174,000</div>
         <p class="pricing-desc">The full functional backbone of your game — all core mechanics and systems.</p>
         <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li>Full core loop scripting</li>
-          <li>2 revisions included</li>
-          <li>50% upfront, 50% on delivery</li>
-        </ul>
+        <ul class="pricing-features"><li>Full core loop scripting</li><li>2 revisions included</li><li>50% upfront, 50% on delivery</li></ul>
         <a href="#contact" class="pricing-btn pricing-btn-outline">Get Started</a>
       </div>
       <div class="pricing-card reveal">
@@ -1030,11 +634,7 @@
         <div class="pricing-robux">approx. R$232,000</div>
         <p class="pricing-desc">A polished, playable version of your game ready for testing or showcasing.</p>
         <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li>Full playable build</li>
-          <li>2 revisions included</li>
-          <li>50% upfront, 50% on delivery</li>
-        </ul>
+        <ul class="pricing-features"><li>Full playable build</li><li>2 revisions included</li><li>50% upfront, 50% on delivery</li></ul>
         <a href="#contact" class="pricing-btn pricing-btn-outline">Get Started</a>
       </div>
       <div class="pricing-card reveal">
@@ -1043,19 +643,14 @@
         <div class="pricing-robux">approx. R$290,000</div>
         <p class="pricing-desc">Complete game development from systems to a launch-ready product.</p>
         <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li>End-to-end game build</li>
-          <li>2 revisions included</li>
-          <li>50% upfront, 50% on delivery</li>
-        </ul>
+        <ul class="pricing-features"><li>End-to-end game build</li><li>2 revisions included</li><li>50% upfront, 50% on delivery</li></ul>
         <a href="#contact" class="pricing-btn pricing-btn-outline">Get Started</a>
       </div>
     </div>
-
-    <div class="pricing-row" style="margin-top:2px; grid-template-columns: 1fr 1fr;">
+    <div class="pricing-row" style="margin-top:2px;grid-template-columns:1fr 1fr">
       <div class="pricing-card reveal">
         <div class="pricing-tier">// Add-Ons</div>
-        <p class="pricing-desc">Stack any of these on top of your base tier. Add-ons are cumulative.</p>
+        <p class="pricing-desc">Stack any of these on top of your base tier.</p>
         <div class="pricing-divider"></div>
         <ul class="pricing-features">
           <li><strong>Physics Heavy</strong><span class="addon-price">+$150 / +R$43,500</span></li>
@@ -1063,86 +658,51 @@
           <li><strong>Complete Game Revamp</strong><span class="addon-price">+$200 / +R$58,000</span></li>
           <li><strong>Asset Scripting</strong><span class="addon-price">+$100 / +R$29,000</span></li>
         </ul>
-        <p style="font-size:0.73rem;color:var(--chalk2);margin-top:14px;font-family:'Share Tech Mono',monospace;line-height:1.6;">Game Revamp covers bug fixes, optimisation and rescripting.</p>
       </div>
       <div class="pricing-card reveal">
         <div class="pricing-tier">// Revenue Share</div>
         <div class="pricing-price">5%+ <span>of revenue</span></div>
-        <p class="pricing-desc" style="margin-top:10px;">Prefer not to pay upfront? We can negotiate a rev-share deal based on your project scope and earning potential.</p>
+        <p class="pricing-desc" style="margin-top:10px">Prefer not to pay upfront? We can negotiate a rev-share deal.</p>
         <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li>Rate negotiated per project</li>
-          <li>Terms agreed before work begins</li>
-          <li>NDA available on request</li>
-        </ul>
+        <ul class="pricing-features"><li>Rate negotiated per project</li><li>Terms agreed before work begins</li><li>NDA available on request</li></ul>
         <a href="#contact" class="pricing-btn pricing-btn-outline">Discuss a Deal</a>
       </div>
     </div>
-
-    <p class="pricing-footnote">Robux quoted at approx. 290 R$/$1 &nbsp;&#183;&nbsp; 50% upfront, 50% on delivery &nbsp;&#183;&nbsp; 2 revisions included &nbsp;&#183;&nbsp; NDA on request</p>
+    <p class="pricing-footnote">Robux quoted at approx. 290 R$/$1 &nbsp;&middot;&nbsp; 50% upfront, 50% on delivery &nbsp;&middot;&nbsp; 2 revisions included &nbsp;&middot;&nbsp; NDA on request</p>
   </section>
 
   <div class="spray-divider"></div>
 
   <!-- PROCESS -->
   <section id="process">
+    <canvas class="spray-bg" id="spray-process"></canvas>
+    <div class="spray-fg" id="fg-process"></div>
     <div class="process-header reveal">
       <div class="section-label">How It Works</div>
       <h2 class="section-title">THE COMMISSION<br>PROCESS</h2>
       <p>Simple, clear, and professional. Here is what to expect when you hire me.</p>
     </div>
     <div>
-      <div class="process-step reveal">
-        <div class="step-num">01 —</div>
-        <div>
-          <div class="step-title">Get in Touch</div>
-          <p class="step-desc">Reach out via Discord or the contact form with your project details — what you need, your budget, and your deadline. The more detail, the better.</p>
-        </div>
-      </div>
-      <div class="process-step reveal">
-        <div class="step-num">02 —</div>
-        <div>
-          <div class="step-title">Scoping &amp; Quote</div>
-          <p class="step-desc">I will review your requirements and come back with a clear price and timeline. We agree on scope before any work begins — no surprises.</p>
-        </div>
-      </div>
-      <div class="process-step reveal">
-        <div class="step-num">03 —</div>
-        <div>
-          <div class="step-title">Development</div>
-          <p class="step-desc">Once agreed and deposited, I get to work. I will keep you updated with progress and check-ins so you are never left in the dark.</p>
-        </div>
-      </div>
-      <div class="process-step reveal">
-        <div class="step-num">04 —</div>
-        <div>
-          <div class="step-title">Delivery &amp; Revisions</div>
-          <p class="step-desc">I deliver the completed work along with documentation. Any revisions in scope are handled promptly until you are happy.</p>
-        </div>
-      </div>
+      <div class="process-step reveal"><div class="step-num">01 —</div><div><div class="step-title">Get in Touch</div><p class="step-desc">Reach out via Discord or the contact form with your project details — what you need, your budget, and your deadline.</p></div></div>
+      <div class="process-step reveal"><div class="step-num">02 —</div><div><div class="step-title">Scoping &amp; Quote</div><p class="step-desc">I will review your requirements and come back with a clear price and timeline. We agree on scope before any work begins.</p></div></div>
+      <div class="process-step reveal"><div class="step-num">03 —</div><div><div class="step-title">Development</div><p class="step-desc">Once agreed and deposited, I get to work. I will keep you updated with progress and check-ins so you are never left in the dark.</p></div></div>
+      <div class="process-step reveal"><div class="step-num">04 —</div><div><div class="step-title">Delivery &amp; Revisions</div><p class="step-desc">I deliver the completed work along with documentation. Any revisions in scope are handled promptly until you are happy.</p></div></div>
     </div>
   </section>
 
   <!-- CONTACT -->
   <section id="contact">
+    <canvas class="spray-bg" id="spray-contact"></canvas>
+    <div class="spray-fg" id="fg-contact"></div>
     <div class="contact-inner">
       <div class="contact-left reveal">
         <div class="section-label">Contact</div>
         <h2 class="section-title">LET'S BUILD<br>SOMETHING.</h2>
         <p>Have a project in mind? I would love to hear about it. Reach out and let us make something great together.</p>
         <div class="contact-links">
-          <a href="https://discord.com" target="_blank" class="contact-link">
-            <span class="contact-link-icon">DC</span>
-            Discord: btcomms
-          </a>
-          <a href="mailto:your@email.com" class="contact-link">
-            <span class="contact-link-icon">@</span>
-            your@email.com
-          </a>
-          <a href="https://www.roblox.com" target="_blank" class="contact-link">
-            <span class="contact-link-icon">RB</span>
-            Roblox Profile
-          </a>
+          <a href="https://discord.com" target="_blank" class="contact-link"><span class="contact-link-icon">DC</span>Discord: btcomms</a>
+          <a href="mailto:your@email.com" class="contact-link"><span class="contact-link-icon">@</span>your@email.com</a>
+          <a href="https://www.roblox.com" target="_blank" class="contact-link"><span class="contact-link-icon">RB</span>Roblox Profile</a>
         </div>
       </div>
       <div class="contact-right reveal">
@@ -1154,32 +714,23 @@
         <div class="form-group">
           <select id="fService">
             <option value="" disabled selected>Service Type</option>
-            <option>Small Scripts and Bug Fixes</option>
-            <option>Single System</option>
-            <option>Multiple Systems</option>
-            <option>Core Game Loop</option>
-            <option>Playable Demo</option>
-            <option>Full Game</option>
-            <option>Revenue Share</option>
-            <option>Other</option>
+            <option>Small Scripts and Bug Fixes</option><option>Single System</option>
+            <option>Multiple Systems</option><option>Core Game Loop</option>
+            <option>Playable Demo</option><option>Full Game</option>
+            <option>Revenue Share</option><option>Other</option>
           </select>
         </div>
         <div class="form-group">
           <select id="fBudget">
             <option value="" disabled selected>Budget</option>
             <option>$150 - Small Scripts and Bug Fixes</option>
-            <option>$250 - Single System</option>
-            <option>$450 - Multiple Systems</option>
-            <option>$600 - Core Game Loop</option>
-            <option>$800 - Playable Demo</option>
-            <option>$1,000 - Full Game</option>
-            <option>Revenue Share (5%+)</option>
+            <option>$250 - Single System</option><option>$450 - Multiple Systems</option>
+            <option>$600 - Core Game Loop</option><option>$800 - Playable Demo</option>
+            <option>$1,000 - Full Game</option><option>Revenue Share (5%+)</option>
             <option>Not sure, let us discuss</option>
           </select>
         </div>
-        <div class="form-group">
-          <textarea id="fMessage" placeholder="Describe your project — what you need, any references, your timeline..."></textarea>
-        </div>
+        <div class="form-group"><textarea id="fMessage" placeholder="Describe your project — what you need, any references, your timeline..."></textarea></div>
         <button class="form-submit" id="submitBtn">SEND REQUEST &rarr;</button>
       </div>
     </div>
@@ -1190,168 +741,367 @@
     <div class="footer-copy">2025 big-tom-commissions &middot; Built with <em>&#9829;</em> &middot; All rights reserved</div>
   </footer>
 
-  <script>
-  // ── FERROFLUID CANVAS ANIMATION ──
-  (function() {
-    var canvas = document.getElementById('ferro-canvas');
-    var ctx = canvas.getContext('2d');
-    var W, H;
-    var blobs = [];
-    var BLOB_COUNT = 7;
-
-    function resize() {
-      W = canvas.width  = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    var colors = ['#1a5c20','#2e7d32','#388e3c','#1b5e20','#4caf50'];
-
-    function Blob(i) {
-      this.x  = Math.random() * W;
-      this.y  = Math.random() * H;
-      this.vx = (Math.random() - 0.5) * 0.7;
-      this.vy = (Math.random() - 0.5) * 0.7;
-      this.r  = 120 + Math.random() * 200;
-      this.color = colors[i % colors.length];
-      this.phase = Math.random() * Math.PI * 2;
-      this.speed = 0.008 + Math.random() * 0.012;
-    }
-    Blob.prototype.update = function(t) {
-      this.phase += this.speed;
-      this.x += this.vx + Math.sin(this.phase * 0.7) * 0.4;
-      this.y += this.vy + Math.cos(this.phase * 0.5) * 0.4;
-      if (this.x < -this.r)  this.x = W + this.r;
-      if (this.x > W + this.r) this.x = -this.r;
-      if (this.y < -this.r)  this.y = H + this.r;
-      if (this.y > H + this.r) this.y = -this.r;
-    };
-    Blob.prototype.draw = function() {
-      var rw = this.r * (1 + 0.25 * Math.sin(this.phase));
-      var rh = this.r * (1 + 0.25 * Math.cos(this.phase * 1.3));
-      var grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, Math.max(rw, rh));
-      grad.addColorStop(0,   hexToRgba(this.color, 0.55));
-      grad.addColorStop(0.5, hexToRgba(this.color, 0.18));
-      grad.addColorStop(1,   hexToRgba(this.color, 0));
-      ctx.save();
-      ctx.beginPath();
-      ctx.ellipse(this.x, this.y, rw, rh, this.phase * 0.3, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-      ctx.restore();
-    };
-
-    function hexToRgba(hex, a) {
-      var r = parseInt(hex.slice(1,3),16);
-      var g = parseInt(hex.slice(3,5),16);
-      var b = parseInt(hex.slice(5,7),16);
-      return 'rgba('+r+','+g+','+b+','+a+')';
-    }
-
-    for (var i = 0; i < BLOB_COUNT; i++) blobs.push(new Blob(i));
-
-    var mx = W/2, my = H/2;
-    document.addEventListener('mousemove', function(e) { mx = e.clientX; my = e.clientY; });
-
-    function loop(t) {
-      ctx.clearRect(0, 0, W, H);
-      // mouse influence — add a small attraction
-      blobs.forEach(function(b, idx) {
-        b.update(t);
-        var dx = mx - b.x, dy = my - b.y;
-        var dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < 300) {
-          b.vx += dx / dist * 0.008;
-          b.vy += dy / dist * 0.008;
-        }
-        // dampen velocity
-        b.vx *= 0.995; b.vy *= 0.995;
-        b.draw();
-      });
-      requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
-  })();
-
-  // ── CURSOR ──
-  var cursor = document.getElementById('cursor');
-  var ring   = document.getElementById('cursorRing');
-  var mx = -100, my = -100, rx = -100, ry = -100, firstMove = true;
-
-  document.addEventListener('mousemove', function(e) {
-    mx = e.clientX; my = e.clientY;
-    if (firstMove) { rx = mx; ry = my; firstMove = false; }
+<script>
+// =============================================================
+// DARK MODE TOGGLE
+// =============================================================
+(function() {
+  var btn = document.getElementById('dm-toggle');
+  if (localStorage.getItem('dm') === '1') document.body.classList.add('dark');
+  btn.addEventListener('click', function() {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('dm', document.body.classList.contains('dark') ? '1' : '0');
   });
-  function tick() {
-    cursor.style.left = mx+'px'; cursor.style.top = my+'px';
-    rx += (mx-rx)*0.13; ry += (my-ry)*0.13;
-    ring.style.left = rx+'px'; ring.style.top = ry+'px';
-    requestAnimationFrame(tick);
+})();
+
+// =============================================================
+// CURSOR
+// =============================================================
+var DOT  = document.getElementById('cur-dot');
+var RING = document.getElementById('cur-ring');
+var mx = -300, my = -300, rx = -300, ry = -300, moved = false;
+
+document.addEventListener('mousemove', function(e) {
+  mx = e.clientX; my = e.clientY;
+  if (!moved) { rx = mx; ry = my; moved = true; }
+});
+
+(function tick() {
+  DOT.style.left  = mx + 'px';
+  DOT.style.top   = my + 'px';
+  rx += (mx - rx) * 0.13;
+  ry += (my - ry) * 0.13;
+  RING.style.left = rx + 'px';
+  RING.style.top  = ry + 'px';
+  requestAnimationFrame(tick);
+})();
+
+document.querySelectorAll('a,button,.service-card,.work-card,.pricing-card').forEach(function(el) {
+  el.addEventListener('mouseenter', function() {
+    DOT.style.transform    = 'translate(-50%,-50%) scale(2.2)';
+    RING.style.width       = '54px';
+    RING.style.height      = '54px';
+    RING.style.opacity     = '0.25';
+    RING.style.borderColor = '#1a5c20';
+  });
+  el.addEventListener('mouseleave', function() {
+    DOT.style.transform    = 'translate(-50%,-50%) scale(1)';
+    RING.style.width       = '36px';
+    RING.style.height      = '36px';
+    RING.style.opacity     = '0.55';
+    RING.style.borderColor = '#2e7d32';
+  });
+});
+
+// =============================================================
+// SCROLL REVEAL
+// =============================================================
+var revObs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(function(el) { revObs.observe(el); });
+
+// =============================================================
+// LIQUID METABALLS — SVG filter trick (GPU accelerated)
+// 
+// The SVG feGaussianBlur+feColorMatrix approach:
+//   1. Draw plain filled circles on a canvas
+//   2. Apply heavy Gaussian blur → circles bleed into each other
+//   3. feColorMatrix cranks contrast to infinity → blurred overlap
+//      area snaps to solid colour, edges become perfectly smooth
+//      organic liquid curves
+// This runs entirely on the GPU, zero pixel-loop CPU cost.
+// =============================================================
+
+// Inject the SVG filter definition once into the page
+(function() {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden');
+  svg.innerHTML =
+    '<defs>' +
+      '<filter id="liquid-filter" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">' +
+        '<feGaussianBlur in="SourceGraphic" stdDeviation="14" result="blur"/>' +
+        '<feColorMatrix in="blur" mode="matrix" ' +
+          'values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -8" result="sharp"/>' +
+        '<feBlend in="SourceGraphic" in2="sharp" mode="normal"/>' +
+      '</filter>' +
+    '</defs>';
+  document.body.insertBefore(svg, document.body.firstChild);
+})();
+
+var GREENS = ['#1a5c20','#2e7d32','#388e3c','#246b2a','#1b5e20'];
+
+function rnd(a,b){ return a + Math.random()*(b-a); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function initLiquidSection(canvasId, blobCount, maxR, opacity) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  var parent = canvas.parentElement;
+  var ctx    = canvas.getContext('2d');
+  var W = 0, H = 0;
+  var blobs = [];
+  var raf   = null;
+
+  function resize() {
+    W = canvas.width  = parent.offsetWidth  || window.innerWidth;
+    H = canvas.height = parent.offsetHeight || 600;
   }
-  tick();
 
-  document.querySelectorAll('a, button, .service-card, .work-card, .pricing-card').forEach(function(el) {
-    el.addEventListener('mouseenter', function() {
-      cursor.style.transform = 'translate(-50%,-50%) scale(2.2)';
-      ring.style.width  = '56px'; ring.style.height = '56px';
-      ring.style.opacity = '0.25';
-      ring.style.borderColor = 'var(--tag)';
-    });
-    el.addEventListener('mouseleave', function() {
-      cursor.style.transform = 'translate(-50%,-50%) scale(1)';
-      ring.style.width  = '38px'; ring.style.height = '38px';
-      ring.style.opacity = '0.55';
-      ring.style.borderColor = 'var(--ferro)';
-    });
-  });
+  function makeBlob() {
+    var r = rnd(maxR * 0.35, maxR);
+    return {
+      x:   rnd(-r, W + r),
+      y:   rnd(-r, H + r),
+      r:   r,
+      col: pick(GREENS),
+      // Lissajous-style drift for organic movement
+      ph:  rnd(0, Math.PI * 2),
+      ph2: rnd(0, Math.PI * 2),
+      spd: rnd(0.004, 0.009),
+      spd2:rnd(0.003, 0.007),
+      amp: rnd(30, 90),
+      amp2:rnd(25, 70),
+      cx:  0, cy: 0   // orbit centre, set after resize
+    };
+  }
 
-  // ── REVEAL ──
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
-  }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
-  document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+  function placeBlob(b) {
+    b.cx = rnd(b.r, W - b.r);
+    b.cy = rnd(b.r, H - b.r);
+    b.x  = b.cx;
+    b.y  = b.cy;
+  }
 
-  // ── FORM ──
-  document.getElementById('submitBtn').addEventListener('click', function() {
-    var btn = this;
-    var name    = document.getElementById('fName').value.trim();
-    var discord = document.getElementById('fDiscord').value.trim();
-    var service = document.getElementById('fService').value;
-    var budget  = document.getElementById('fBudget').value;
-    var message = document.getElementById('fMessage').value.trim();
-    if (!name || !discord || !service || !budget || !message) {
-      btn.textContent = 'FILL ALL FIELDS';
-      btn.style.background = '#7a1a1a';
-      setTimeout(function() { btn.textContent = 'SEND REQUEST →'; btn.style.background = ''; }, 2500);
-      return;
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Apply the liquid SVG filter to the whole canvas draw
+    // We achieve this by drawing all blobs then filtering the canvas element
+    // via CSS (set once in resize). Each blob is a radial-gradient circle.
+    for (var i = 0; i < blobs.length; i++) {
+      var b = blobs[i];
+      b.ph  += b.spd;
+      b.ph2 += b.spd2;
+      // Smooth Lissajous orbit — gives natural lazy liquid drift
+      b.x = b.cx + Math.sin(b.ph)  * b.amp;
+      b.y = b.cy + Math.cos(b.ph2) * b.amp2;
+
+      // Keep within bounds softly (spring back harder so blobs hug edges)
+      var margin = b.r * 0.3;
+      if (b.x < margin)     b.cx += (margin - b.x) * 0.04;
+      if (b.x > W - margin) b.cx -= (b.x - (W - margin)) * 0.04;
+      if (b.y < margin)     b.cy += (margin - b.y) * 0.04;
+      if (b.y > H - margin) b.cy -= (b.y - (H - margin)) * 0.04;
+
+      // Draw filled circle — the blur+threshold does the rest
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fillStyle = b.col;
+      ctx.fill();
     }
-    btn.textContent = 'SENDING...';
-    btn.disabled = true;
-    fetch('https://formspree.io/f/mlgprzva', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ name, discord_roblox: discord, service_type: service, budget, message })
-    }).then(function(res) {
-      if (res.ok) {
-        btn.textContent = 'REQUEST SENT!';
-        btn.style.background = '#0a4a0a';
-        ['fName','fDiscord','fMessage'].forEach(function(id) { document.getElementById(id).value = ''; });
-        document.getElementById('fService').selectedIndex = 0;
-        document.getElementById('fBudget').selectedIndex = 0;
+
+    raf = requestAnimationFrame(loop);
+  }
+
+  resize();
+  // Apply SVG liquid filter + overall opacity to the canvas element
+  canvas.style.filter  = 'url(#liquid-filter)';
+  canvas.style.opacity = opacity;
+
+  for (var i = 0; i < blobCount; i++) {
+    var b = makeBlob();
+    placeBlob(b);
+    blobs.push(b);
+  }
+
+  // Only animate when section is visible
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        resize();
+        if (!raf) loop();
       } else {
-        btn.textContent = 'ERROR - TRY AGAIN';
-        btn.style.background = '#7a1a1a';
+        if (raf) { cancelAnimationFrame(raf); raf = null; }
       }
-      btn.disabled = false;
-      setTimeout(function() { btn.textContent = 'SEND REQUEST →'; btn.style.background = ''; }, 3500);
-    }).catch(function() {
-      btn.textContent = 'ERROR - TRY AGAIN';
-      btn.style.background = '#7a1a1a';
-      btn.disabled = false;
-      setTimeout(function() { btn.textContent = 'SEND REQUEST →'; btn.style.background = ''; }, 3500);
     });
+  }, { threshold: 0 });
+  io.observe(parent);
+
+  window.addEventListener('resize', function() {
+    resize();
+    blobs.forEach(function(b) { placeBlob(b); });
   });
-  </script>
+}
+
+// Initialise all sections
+// params: canvasId, blobCount, maxBlobRadius(px), canvasOpacity(0-1)
+initLiquidSection('spray-hero',     6, 160, 0.10);
+initLiquidSection('spray-services', 5, 140, 0.09);
+initLiquidSection('spray-about',    4, 130, 0.08);
+initLiquidSection('spray-work',     5, 140, 0.09);
+initLiquidSection('spray-pricing',  5, 150, 0.09);
+initLiquidSection('spray-process',  4, 130, 0.08);
+initLiquidSection('spray-contact',  5, 140, 0.09);
+
+
+// =============================================================
+// LIQUID DRIPS — foreground CSS assets
+// Heavy teardrop shapes that slowly ooze downward
+// =============================================================
+var C1 = '#1a5c20', C2 = '#2e7d32', C3 = '#4caf50';
+
+function addDrips(id, n) {
+  var fg = document.getElementById(id);
+  if (!fg) return;
+  for (var i = 0; i < n; i++) {
+    // Outer drip stem
+    var stem = document.createElement('div');
+    stem.style.cssText =
+      'position:absolute;top:0;width:' + rnd(3,7).toFixed(1) + 'px;' +
+      'background:' + pick([C1,C2,C3]) + ';' +
+      'border-radius:0 0 50% 50%;' +
+      'left:' + rnd(2,98).toFixed(1) + '%;' +
+      'height:0;opacity:0;' +
+      'filter:blur(0.8px);';
+    fg.appendChild(stem);
+
+    var h   = rnd(55, 200);
+    var dur = rnd(4000, 11000);
+    var del = rnd(0, 16000);
+    stem.animate([
+      { height:'0px',  opacity:0,   transform:'translateY(0)',    offset:0    },
+      { height:'0px',  opacity:0.8, transform:'translateY(0)',    offset:0.02 },
+      { height:h+'px', opacity:0.7, transform:'translateY(0)',    offset:0.55 },
+      { height:h+'px', opacity:0.45,transform:'translateY(0)',    offset:0.85 },
+      { height:h+'px', opacity:0,   transform:'translateY(20px)', offset:1    }
+    ], { duration:dur, delay:del, iterations:Infinity,
+         easing:'cubic-bezier(0.25,0.1,0.6,1)', fill:'backwards' });
+
+    // Teardrop bulb at tip
+    var bulb = document.createElement('div');
+    var bw   = rnd(12, 24);
+    bulb.style.cssText =
+      'position:absolute;bottom:-' + (bw*0.6).toFixed(0) + 'px;' +
+      'left:' + (-(bw/2 - 2)).toFixed(1) + 'px;' +
+      'width:' + bw + 'px;height:' + (bw*1.3).toFixed(1) + 'px;' +
+      'background:inherit;border-radius:50% 50% 55% 55%;' +
+      'filter:blur(1px);';
+    stem.appendChild(bulb);
+  }
+}
+
+function addPuddles(id, n) {
+  // Flat ellipse "puddles" that swell and fade — like liquid landing
+  var fg = document.getElementById(id);
+  if (!fg) return;
+  for (var i = 0; i < n; i++) {
+    var el  = document.createElement('div');
+    var w   = rnd(20, 80);
+    var h   = w * rnd(0.3, 0.55); // squashed = flat puddle
+    var op  = rnd(0.12, 0.32);
+    var dur = rnd(5000, 13000);
+    var del = rnd(0, 18000);
+    el.style.cssText =
+      'position:absolute;border-radius:50%;' +
+      'width:' + w + 'px;height:' + h + 'px;' +
+      'background:' + pick([C1,C2,C3]) + ';' +
+      'left:' + rnd(0,100).toFixed(1) + '%;' +
+      'top:'  + rnd(0,100).toFixed(1) + '%;' +
+      'transform:translate(-50%,-50%) scale(0);opacity:0;' +
+      'filter:blur(2px);';
+    fg.appendChild(el);
+    el.animate([
+      { transform:'translate(-50%,-50%) scale(0)',   opacity:0,   offset:0    },
+      { transform:'translate(-50%,-50%) scale(0.2)', opacity:op,  offset:0.07 },
+      { transform:'translate(-50%,-50%) scale(1)',   opacity:op,  offset:0.4  },
+      { transform:'translate(-50%,-50%) scale(1.05)',opacity:op*0.6, offset:0.75},
+      { transform:'translate(-50%,-50%) scale(0.9)', opacity:0,   offset:1    }
+    ], { duration:dur, delay:del, iterations:Infinity,
+         easing:'ease-out', fill:'backwards' });
+  }
+}
+
+function addRipples(id, n) {
+  // Expanding liquid ripple rings
+  var fg = document.getElementById(id);
+  if (!fg) return;
+  for (var i = 0; i < n; i++) {
+    var el  = document.createElement('div');
+    var sz  = rnd(16, 50);
+    var dur = rnd(4000, 9000);
+    var del = rnd(0, 14000);
+    el.style.cssText =
+      'position:absolute;border-radius:50%;' +
+      'width:' + sz + 'px;height:' + sz + 'px;' +
+      'border:2px solid ' + pick([C1,C2,C3]) + ';' +
+      'left:' + rnd(5,90).toFixed(1) + '%;' +
+      'top:'  + rnd(5,90).toFixed(1) + '%;' +
+      'margin-left:' + -(sz/2) + 'px;margin-top:' + -(sz/2) + 'px;' +
+      'opacity:0;filter:blur(0.5px);';
+    fg.appendChild(el);
+    el.animate([
+      { transform:'scale(0.15) scaleY(0.5)', opacity:0.7, offset:0    },
+      { transform:'scale(0.15) scaleY(0.5)', opacity:0.7, offset:0.03 },
+      { transform:'scale(3.5)  scaleY(0.6)', opacity:0,   offset:1    }
+    ], { duration:dur, delay:del, iterations:Infinity,
+         easing:'ease-out', fill:'backwards' });
+  }
+}
+
+// Populate sections
+addDrips('fg-hero',10);    addPuddles('fg-hero',14);    addRipples('fg-hero',5);
+addDrips('fg-services',7); addPuddles('fg-services',10);addRipples('fg-services',4);
+addDrips('fg-about',6);    addPuddles('fg-about',8);    addRipples('fg-about',3);
+addDrips('fg-work',8);     addPuddles('fg-work',12);    addRipples('fg-work',4);
+addDrips('fg-pricing',8);  addPuddles('fg-pricing',10); addRipples('fg-pricing',4);
+addDrips('fg-process',5);  addPuddles('fg-process',8);  addRipples('fg-process',3);
+addDrips('fg-contact',7);  addPuddles('fg-contact',10); addRipples('fg-contact',4);
+
+
+// =============================================================
+// FORM
+// =============================================================
+document.getElementById('submitBtn').addEventListener('click', function() {
+  var btn  = this;
+  var name = document.getElementById('fName').value.trim();
+  var disc = document.getElementById('fDiscord').value.trim();
+  var svc  = document.getElementById('fService').value;
+  var bud  = document.getElementById('fBudget').value;
+  var msg  = document.getElementById('fMessage').value.trim();
+
+  if (!name||!disc||!svc||!bud||!msg) {
+    btn.textContent = 'FILL ALL FIELDS';
+    btn.style.background = '#7a1a1a';
+    setTimeout(function(){btn.textContent='SEND REQUEST \u2192';btn.style.background='';},2500);
+    return;
+  }
+  btn.textContent = 'SENDING...';
+  btn.disabled = true;
+  fetch('https://formspree.io/f/mlgprzva',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body:JSON.stringify({name:name,discord_roblox:disc,service_type:svc,budget:bud,message:msg})
+  }).then(function(res){
+    if(res.ok){
+      btn.textContent='REQUEST SENT!';
+      btn.style.background='#1a5c20';
+      ['fName','fDiscord','fMessage'].forEach(function(id){document.getElementById(id).value='';});
+      document.getElementById('fService').selectedIndex=0;
+      document.getElementById('fBudget').selectedIndex=0;
+    } else {
+      btn.textContent='ERROR \u2014 TRY AGAIN';
+      btn.style.background='#7a1a1a';
+    }
+    btn.disabled=false;
+    setTimeout(function(){btn.textContent='SEND REQUEST \u2192';btn.style.background='';},3500);
+  }).catch(function(){
+    btn.textContent='ERROR \u2014 TRY AGAIN';
+    btn.style.background='#7a1a1a';
+    btn.disabled=false;
+    setTimeout(function(){btn.textContent='SEND REQUEST \u2192';btn.style.background='';},3500);
+  });
+});
+</script>
 </body>
 </html>
